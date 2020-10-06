@@ -8,6 +8,9 @@ using System.Windows.Forms;
 using SharpShell.Attributes;
 using SharpShell.SharpContextMenu;
 using Microsoft.WindowsAPICodePack.Shell;
+using System.Diagnostics;
+using System.Text;
+using System.Data.SqlTypes;
 
 namespace AR.MediaInfoExtension
 {
@@ -16,15 +19,19 @@ namespace AR.MediaInfoExtension
     public class MediaInfoContextMenu : SharpContextMenu
     {
         private readonly string _header = "MediaInfo ShellExtension " + typeof(MediaInfoContextMenu).Assembly.GetName().Version.ToString();
-        private readonly List<string> _masks = new List<string>()
+        private readonly string[] _masks = new string[]
                 {
                     "*.webm", "*.mpg", "*.mpeg", "*.mp2", "*.mpe", "*.mpv", "*.mkv",
                     "*.ogg", "*.mp4", "*.m4p", "*.m4v", "*.avi", "*.wmv", "*.mov", "*.qt", "*.flv", "*.svf",
                 };
+        private readonly int _procCount;
+#if DEBUG
+        private StringBuilder _log = new StringBuilder();
+#endif
 
         public MediaInfoContextMenu()
         {
-
+            _procCount = Environment.ProcessorCount;
         }
 
         protected override bool CanShowMenu()
@@ -69,13 +76,19 @@ namespace AR.MediaInfoExtension
 
             Task.Run(() =>
             {
+                var timer = Stopwatch.StartNew();
+
                 foreach (var folder in SelectedItemPaths)
                 {
                     res = res.Add(ProcessFolder(folder, inclSub, out var cnt));
                     count += cnt;
                 }
-                MessageBox.Show($"Selected folder(s) contains:{Environment.NewLine}Total {count} video files{Environment.NewLine}Duration: {(int)res.TotalHours} hours and {res.Minutes} minutes{Environment.NewLine}",
+                MessageBox.Show($"Selected folder(s) contains:{Environment.NewLine}Total {count} video files{Environment.NewLine}Duration: {(int)res.TotalHours} hours and {res.Minutes} minutes{Environment.NewLine}Elapsed {timer.ElapsedMilliseconds} ms",
                     _header, MessageBoxButtons.OK, MessageBoxIcon.Information);
+#if DEBUG
+                File.WriteAllText(@"d:\temp\milog.log", _log.ToString());
+                _log.Clear();
+#endif
             });
         }
 
@@ -94,7 +107,12 @@ namespace AR.MediaInfoExtension
 
                 count = files.Count();
 
-                return files.Select(f => GetVideoDuration(f.FullName)).Aggregate(result, (acc, ts) => acc.Add(ts));
+                var tasks = files.Select(f => Task.Run(() => GetVideoDuration(f.FullName))).ToArray();
+                Task.WaitAll(tasks);
+                foreach (var t in tasks)
+                    result = result.Add(t.Result);
+                return result;
+                //return files.Select(f => GetVideoDuration(f.FullName)).Aggregate(result, (acc, ts) => acc.Add(ts));
             }
             catch
             {
@@ -104,8 +122,13 @@ namespace AR.MediaInfoExtension
 
         private TimeSpan GetVideoDuration(string filePath)
         {
+#if DEBUG
+            var tmr = Stopwatch.StartNew();
+#endif
+            var result = true;
             try
             {
+
                 using (var shell = ShellObject.FromParsingName(filePath))
                 {
                     var prop = shell.Properties.System.Media.Duration;
@@ -117,7 +140,15 @@ namespace AR.MediaInfoExtension
             }
             catch
             {
+                result = false;
                 return TimeSpan.Zero;
+            }
+            finally
+            {
+#if DEBUG
+                tmr.Stop();
+                _log.AppendLine($"File {filePath} processed in {tmr.Elapsed}. Result {result}");
+#endif
             }
 
         }

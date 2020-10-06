@@ -29,7 +29,4 @@ if '%errorlevel%' NEQ '0' (
     CD /D "%~dp0"
 :-------------------------------------- 
 
-serverregistrationmanager.exe uninstall mediainfoextension.dll
-
-taskkill /f /IM explorer.exe
-start explorer.exe
+serverregistrationmanager.exe install mediainfoextension.dll -codebase
