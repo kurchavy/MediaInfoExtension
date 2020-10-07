@@ -48,7 +48,7 @@ namespace AR.MediaInfoExtension
                     var timer = Stopwatch.StartNew();
                     var duration = _proc.GetTotalVideoDuration(SelectedItemPaths, out var count);
                     MessageBox.Show(
-                        $"Selected folder(s) contains:{Environment.NewLine}Total {count} video files{Environment.NewLine}Duration: {(int) duration.TotalHours} hours and {duration.Minutes} minutes{Environment.NewLine}Elapsed {timer.ElapsedMilliseconds} ms",
+                        $"Selection contains:{Environment.NewLine}{count} video file(s){Environment.NewLine}Total duration: {(int) duration.TotalHours} hours and {duration.Minutes} minutes{Environment.NewLine}Time to get info: {timer.ElapsedMilliseconds} ms",
                         _header, MessageBoxButtons.OK, MessageBoxIcon.Information);
                     _logger.FlushToFile(@"d:\temp\milog.log");
                 });

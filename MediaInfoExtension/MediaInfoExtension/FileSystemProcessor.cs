@@ -32,7 +32,7 @@ namespace AR.MediaInfoExtension
             var enumerable = fsItems as string[] ?? fsItems.ToArray();
             var dirs = enumerable.Where(i => File.GetAttributes(i).HasFlag(FileAttributes.Directory));
             var files = enumerable.Where(i =>
-                !File.GetAttributes(i).HasFlag(FileAttributes.Directory) && _masks.Contains("*"+Path.GetExtension(i)));
+                !File.GetAttributes(i).HasFlag(FileAttributes.Directory) && _masks.Contains("*" + Path.GetExtension(i)));
 
             foreach (var d in dirs)
             {

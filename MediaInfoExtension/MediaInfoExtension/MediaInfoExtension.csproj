@@ -83,7 +83,10 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>if $(ConfigurationName) == Release copy /Y "$(TargetDir)*.dll" "$(SolutionDir)..\Setup\"
+if $(ConfigurationName) == Release copy /Y "$(TargetDir)ServerRegistrationManager.exe" "$(SolutionDir)..\Setup\"
+if $(ConfigurationName) == Release copy /Y "$(TargetDir)startup.cmd" "$(SolutionDir)..\Setup\install.cmd"
+if $(ConfigurationName) == Release copy /Y "$(TargetDir)uninstall.cmd" "$(SolutionDir)..\Setup\"
+</PostBuildEvent>
   </PropertyGroup>
 </Project>
